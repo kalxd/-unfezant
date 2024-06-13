@@ -1,0 +1,10 @@
+[package]
+name = "unfezant"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+gtk = "0.18.1"
+rumqttc = "0.24.0"
+rumqttd = "0.19.0"
+tokio = "1.38.0"
