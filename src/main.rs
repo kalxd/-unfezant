@@ -1,11 +1,12 @@
 use gtk::{
-	prelude::{ApplicationExt, ApplicationExtManual, WidgetExt},
-	Application, ApplicationWindow,
+	prelude::{ApplicationExt, ApplicationExtManual, ContainerExt, WidgetExt},
+	Application, ApplicationWindow, Box as GtkBox,
 };
 
 fn build_ui(app: &Application) {
 	let window = ApplicationWindow::builder().application(app).build();
-
+	let layout = GtkBox::builder().build();
+	window.add(&layout);
 	window.show_all();
 }
 
