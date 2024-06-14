@@ -3,6 +3,10 @@ use gtk::{
 	Application, ApplicationWindow, Box as GtkBox, Button, Entry, Frame, Orientation, TextView,
 };
 
+use std::thread;
+
+mod server;
+
 fn build_ui(app: &Application) {
 	let window = ApplicationWindow::builder()
 		.application(app)
@@ -36,5 +40,12 @@ fn main() {
 		.build();
 
 	app.connect_activate(build_ui);
+
+	thread::spawn(|| {
+		println!("server start");
+
+		server::run_server();
+	});
+
 	app.run();
 }
