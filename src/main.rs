@@ -5,6 +5,7 @@ use gtk::{
 
 use std::thread;
 
+mod client;
 mod server;
 
 fn build_ui(app: &Application) {
@@ -43,8 +44,12 @@ fn main() {
 
 	thread::spawn(|| {
 		println!("server start");
-
 		server::run_server();
+	});
+
+	thread::spawn(|| {
+		println!("client start");
+		client::run_client();
 	});
 
 	app.run();
