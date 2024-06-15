@@ -1,4 +1,4 @@
-use rumqttc::{Client, MqttOptions, QoS};
+use rumqttc::{Client, Connection, MqttOptions, QoS};
 
 const CHANNEL: &str = "hello/world";
 
@@ -13,13 +13,11 @@ impl SendMessage for Client {
 	}
 }
 
-pub fn run_client() {
+pub fn run_client() -> (Client, Connection) {
 	let config = MqttOptions::new("1", "127.0.0.1", 1883);
-	let (client, mut conn) = Client::new(config, 1);
+	let (client, conn) = Client::new(config, 1);
 
 	client.subscribe(CHANNEL, QoS::AtLeastOnce).unwrap();
 
-	for msg in conn.iter() {
-		println!("{:?}", msg);
-	}
+	(client, conn)
 }
