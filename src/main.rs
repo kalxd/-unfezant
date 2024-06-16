@@ -6,14 +6,16 @@ use futures::{
 use gtk::{
 	glib::MainContext,
 	prelude::{
-		ApplicationExt, ApplicationExtManual, BoxExt, ContainerExt, EntryExt, TextBufferExt,
-		WidgetExt,
+		ApplicationExt, ApplicationExtManual, BoxExt, ButtonExt, ContainerExt, EntryExt,
+		TextBufferExt, WidgetExt,
 	},
 	Application, ApplicationWindow, Box as GtkBox, Button, Entry, Frame, Orientation, TextBuffer,
 	TextView,
 };
 
 use std::thread;
+
+use crate::client::SendMessage;
 
 mod client;
 mod server;
@@ -53,6 +55,14 @@ fn build_ui(app: &Application, tx: Sender<Event>) -> Widget {
 	let btn = Button::builder().label("发送").build();
 	send_layout.pack_start(&btn, false, true, 0);
 	layout.pack_start(&send_layout, false, true, 0);
+	btn.connect_clicked({
+		let entry = entry.clone();
+		let tx = tx.clone();
+		move |_| {
+			let text = entry.text().to_string();
+			tx.clone().try_send(Event::SendText(text)).unwrap();
+		}
+	});
 	entry.connect_activate(move |entry| {
 		let text = entry.text().to_string();
 		tx.clone().try_send(Event::SendText(text)).unwrap();
@@ -72,6 +82,8 @@ fn main() {
 	app.connect_activate({
 		move |app| {
 			let (tx, rx) = channel::<Event>(10);
+			let (stx, srx) = std::sync::mpsc::channel::<String>();
+
 			let widget = build_ui(app, tx.clone());
 
 			thread::spawn(|| {
@@ -83,11 +95,20 @@ fn main() {
 				let mut tx = tx.clone();
 				move || {
 					println!("client start");
-					let (_, mut conn) = client::run_client();
-					for msg in conn.iter().filter_map(|x| x.ok()) {
-						let payload = format!("{:?}\n", msg);
-						tx.try_send(Event::SendMsg(payload)).unwrap();
-					}
+					let (client, mut conn) = client::run_client();
+
+					thread::spawn(move || {
+						for msg in conn.iter().filter_map(|x| x.ok()) {
+							let payload = format!("{:?}\n", msg);
+							tx.try_send(Event::SendMsg(payload)).unwrap();
+						}
+					});
+
+					thread::spawn(move || {
+						while let Ok(msg) = srx.recv() {
+							client.send(msg);
+						}
+					});
 				}
 			});
 
@@ -99,7 +120,7 @@ fn main() {
 							let mut end = text_buf.end_iter();
 							text_buf.insert(&mut end, &text);
 						}
-						Event::SendText(text) => {}
+						Event::SendText(text) => stx.send(text).unwrap(),
 					};
 
 					ready(())

@@ -7,7 +7,7 @@ fn build_config() -> Config {
 		"1".into(),
 		ServerSettings {
 			name: "v4-1".into(),
-			listen: SocketAddr::from_str("127.0.0.1:1883").unwrap(),
+			listen: SocketAddr::from_str("0.0.0.0:1883").unwrap(),
 			next_connection_delay_ms: 1,
 			connections: ConnectionSettings {
 				connection_timeout_ms: 60000,
