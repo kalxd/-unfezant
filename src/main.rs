@@ -60,11 +60,13 @@ fn build_ui(app: &Application, tx: Sender<Event>) -> Widget {
 		let tx = tx.clone();
 		move |_| {
 			let text = entry.text().to_string();
+			entry.set_text("");
 			tx.clone().try_send(Event::SendText(text)).unwrap();
 		}
 	});
 	entry.connect_activate(move |entry| {
 		let text = entry.text().to_string();
+		entry.set_text("");
 		tx.clone().try_send(Event::SendText(text)).unwrap();
 	});
 
@@ -101,6 +103,15 @@ fn main() {
 						for msg in conn.iter().filter_map(|x| x.ok()) {
 							let payload = format!("{:?}\n", msg);
 							tx.try_send(Event::SendMsg(payload)).unwrap();
+
+							if let rumqttc::Event::Incoming(rumqttc::Incoming::Publish(pb)) = msg {
+								if let Some(json) =
+									serde_json::from_slice::<serde_json::Value>(&pb.payload).ok()
+								{
+									let msg = "接收到：".to_string() + &json.to_string();
+									tx.try_send(Event::SendMsg(msg)).unwrap();
+								}
+							}
 						}
 					});
 
