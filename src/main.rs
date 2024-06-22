@@ -9,8 +9,8 @@ use gtk::{
 		ApplicationExt, ApplicationExtManual, BoxExt, ButtonExt, ContainerExt, EntryExt,
 		TextBufferExt, WidgetExt,
 	},
-	Application, ApplicationWindow, Box as GtkBox, Button, Entry, Frame, Orientation, TextBuffer,
-	TextView,
+	Application, ApplicationWindow, Box as GtkBox, Button, Entry, Frame, Orientation,
+	ScrolledWindow, TextBuffer, TextView,
 };
 
 use std::thread;
@@ -32,8 +32,8 @@ struct Widget {
 fn build_ui(app: &Application, tx: Sender<Event>) -> Widget {
 	let window = ApplicationWindow::builder()
 		.application(app)
-		.width_request(600)
-		.height_request(400)
+		.default_width(600)
+		.default_height(400)
 		.build();
 	let layout = GtkBox::builder()
 		.orientation(Orientation::Vertical)
@@ -41,12 +41,14 @@ fn build_ui(app: &Application, tx: Sender<Event>) -> Widget {
 		.build();
 
 	let view_frame = Frame::builder().label("日志").build();
+	let scroll_window = ScrolledWindow::builder().build();
 	let text_buf = TextBuffer::builder().build();
 	let text_view = TextView::builder()
 		.buffer(&text_buf)
 		.editable(false)
 		.build();
-	view_frame.add(&text_view);
+	scroll_window.add(&text_view);
+	view_frame.add(&scroll_window);
 	layout.pack_start(&view_frame, true, true, 0);
 
 	let send_layout = GtkBox::builder().spacing(10).build();
@@ -108,7 +110,7 @@ fn main() {
 								if let Some(json) =
 									serde_json::from_slice::<serde_json::Value>(&pb.payload).ok()
 								{
-									let msg = "接收到：".to_string() + &json.to_string();
+									let msg = "接收到：".to_string() + &json.to_string() + "\n";
 									tx.try_send(Event::SendMsg(msg)).unwrap();
 								}
 							}
