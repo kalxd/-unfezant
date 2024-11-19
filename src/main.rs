@@ -1,13 +1,26 @@
 use gtk4::{
-	prelude::{ApplicationExt, ApplicationExtManual, GtkWindowExt},
-	Application, ApplicationWindow,
+	prelude::{ApplicationExt, ApplicationExtManual, BoxExt, GtkWindowExt, WidgetExt},
+	Application, ApplicationWindow, Box as GtkBox, Button, Orientation, TextView,
 };
 
 fn setup_ui(app: &Application) {
+	let layout = GtkBox::builder()
+		.orientation(Orientation::Vertical)
+		.spacing(10)
+		.build();
+
+	let text_view = TextView::new();
+	text_view.set_vexpand(true);
+	layout.append(&text_view);
+
+	let send_btn = Button::with_label("发送");
+	layout.append(&send_btn);
+
 	let window = ApplicationWindow::builder()
 		.application(app)
 		.default_width(800)
 		.default_height(600)
+		.child(&layout)
 		.build();
 
 	window.present();
