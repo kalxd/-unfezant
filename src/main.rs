@@ -18,6 +18,7 @@ fn setup_ui(app: &Application) {
 
 	let window = ApplicationWindow::builder()
 		.application(app)
+		.title("mqtt控制台")
 		.default_width(800)
 		.default_height(600)
 		.child(&layout)
