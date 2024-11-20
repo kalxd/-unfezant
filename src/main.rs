@@ -1,12 +1,18 @@
 use gtk4::{
+	glib,
 	prelude::{ApplicationExt, ApplicationExtManual, BoxExt, GtkWindowExt},
 	Application, ApplicationWindow, Box as GtkBox, Orientation,
 };
 
+mod client;
 mod server;
 mod widget;
 
+use std::thread;
+
 fn setup_ui(app: &Application) {
+	let (client, mut eventloop) = client::RClient::new();
+
 	let layout = GtkBox::builder()
 		.orientation(Orientation::Vertical)
 		.spacing(10)
@@ -27,9 +33,23 @@ fn setup_ui(app: &Application) {
 		.build();
 
 	window.present();
+
+	glib::MainContext::default().spawn(async move {
+		client.subcribe().await;
+	});
+
+	glib::MainContext::default().spawn_local(async move {
+		loop {
+			if let Ok(evt) = eventloop.poll().await {
+				dbg!(evt);
+			}
+		}
+	});
 }
 
 fn main() {
+	let srv = thread::spawn(|| server::run_server);
+
 	let app = Application::builder()
 		.application_id("person.xgley.unfezant")
 		.build();
@@ -37,4 +57,6 @@ fn main() {
 	app.connect_activate(setup_ui);
 
 	app.run();
+
+	srv.join().unwrap();
 }
