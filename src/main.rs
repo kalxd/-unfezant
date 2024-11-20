@@ -1,5 +1,5 @@
+use client::SendMessage;
 use gtk4::{
-	glib,
 	prelude::{ApplicationExt, ApplicationExtManual, BoxExt, GtkWindowExt},
 	Application, ApplicationWindow, Box as GtkBox, Orientation,
 };
@@ -11,7 +11,14 @@ mod widget;
 use std::thread;
 
 fn setup_ui(app: &Application) {
-	let (client, mut eventloop) = client::RClient::new();
+	thread::spawn(|| server::run_server);
+
+	let (client, mut conn) = client::new_client();
+	thread::spawn(move || {
+		conn.iter().filter_map(|x| x.ok()).for_each(|x| {
+			dbg!(x);
+		})
+	});
 
 	let layout = GtkBox::builder()
 		.orientation(Orientation::Vertical)
@@ -34,26 +41,12 @@ fn setup_ui(app: &Application) {
 
 	window.present();
 
-	messager.connect_send_message(|msg| {
-		dbg!(msg);
-	});
-
-	glib::MainContext::default().spawn(async move {
-		client.subcribe().await;
-	});
-
-	glib::MainContext::default().spawn_local(async move {
-		loop {
-			if let Ok(evt) = eventloop.poll().await {
-				dbg!(evt);
-			}
-		}
+	messager.connect_send_message(move |msg| {
+		client.send(msg);
 	});
 }
 
 fn main() {
-	let srv = thread::spawn(|| server::run_server);
-
 	let app = Application::builder()
 		.application_id("person.xgley.unfezant")
 		.build();
@@ -61,6 +54,4 @@ fn main() {
 	app.connect_activate(setup_ui);
 
 	app.run();
-
-	srv.join().unwrap();
 }
