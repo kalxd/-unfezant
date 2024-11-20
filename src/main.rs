@@ -34,6 +34,10 @@ fn setup_ui(app: &Application) {
 
 	window.present();
 
+	messager.connect_send_message(|msg| {
+		dbg!(msg);
+	});
+
 	glib::MainContext::default().spawn(async move {
 		client.subcribe().await;
 	});

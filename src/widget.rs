@@ -1,5 +1,5 @@
 use gtk4::{
-	prelude::{BoxExt, WidgetExt},
+	prelude::{BoxExt, ButtonExt, EditableExt, EntryExt, WidgetExt},
 	Box as GtkBox, Button, Entry, Frame, ScrolledWindow, TextBuffer, TextView,
 };
 
@@ -33,6 +33,8 @@ impl LogView {
 
 pub struct SendMessager {
 	pub container: GtkBox,
+	text_entry: Entry,
+	send_btn: Button,
 }
 
 impl SendMessager {
@@ -46,6 +48,29 @@ impl SendMessager {
 		let send_btn = Button::with_label("发送");
 		container.append(&send_btn);
 
-		Self { container }
+		Self {
+			container,
+			text_entry,
+			send_btn,
+		}
+	}
+
+	pub fn connect_send_message<F>(&self, f: F)
+	where
+		F: Fn(String) + Clone + 'static,
+	{
+		self.send_btn.connect_clicked({
+			let f = f.clone();
+			let entry = self.text_entry.clone();
+			move |_| {
+				let value = entry.text();
+				f(value.to_string());
+			}
+		});
+
+		self.text_entry.connect_activate(move |entry| {
+			let value = entry.text();
+			f(value.to_string())
+		});
 	}
 }
