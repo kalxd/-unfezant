@@ -1,8 +1,9 @@
 use gtk4::{
-	prelude::{BoxExt, ButtonExt, EditableExt, EntryExt, WidgetExt},
+	prelude::{BoxExt, ButtonExt, EditableExt, EntryExt, TextBufferExt, WidgetExt},
 	Box as GtkBox, Button, Entry, Frame, ScrolledWindow, TextBuffer, TextView,
 };
 
+#[derive(Clone)]
 pub struct LogView {
 	pub container: Frame,
 	text_buf: TextBuffer,
@@ -28,6 +29,11 @@ impl LogView {
 			container,
 			text_buf,
 		}
+	}
+
+	pub fn append_log(&self, log: &str) {
+		let mut iter = self.text_buf.end_iter();
+		self.text_buf.insert(&mut iter, log);
 	}
 }
 

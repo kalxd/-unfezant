@@ -3,25 +3,17 @@ use gtk4::{
 	prelude::{ApplicationExt, ApplicationExtManual, BoxExt, GtkWindowExt},
 	Application, ApplicationWindow, Box as GtkBox, Orientation,
 };
+use rumqttc::{Event, Packet};
 
 mod client;
 mod server;
 mod widget;
 
+use core::str;
 use std::thread;
 
 fn setup_ui(app: &Application) {
 	thread::spawn(|| server::run_server());
-
-	let (client, mut conn) = client::new_client();
-	thread::spawn(move || {
-		conn.iter().for_each(|x| match x {
-			Ok(x) => {
-				dbg!(x);
-			}
-			Err(e) => eprintln!("{e}"),
-		})
-	});
 
 	let layout = GtkBox::builder()
 		.orientation(Orientation::Vertical)
@@ -43,6 +35,26 @@ fn setup_ui(app: &Application) {
 		.build();
 
 	window.present();
+
+	let (client, mut conn) = client::new_client();
+	thread::spawn({
+		move || {
+			conn.iter()
+				.filter_map(|x| x.ok())
+				.filter_map(|x| match x {
+					Event::Incoming(m) => Some(m),
+					_ => None,
+				})
+				.filter_map(|x| match x {
+					Packet::Publish(p) => Some(p),
+					_ => None,
+				})
+				.for_each(|x| {
+					let msg = format!("接收到：{:?}", str::from_utf8(&x.payload));
+					dbg!(msg);
+				});
+		}
+	});
 
 	messager.connect_send_message(move |msg| {
 		client.send(msg);
