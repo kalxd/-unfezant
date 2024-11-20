@@ -11,12 +11,15 @@ mod widget;
 use std::thread;
 
 fn setup_ui(app: &Application) {
-	thread::spawn(|| server::run_server);
+	thread::spawn(|| server::run_server());
 
 	let (client, mut conn) = client::new_client();
 	thread::spawn(move || {
-		conn.iter().filter_map(|x| x.ok()).for_each(|x| {
-			dbg!(x);
+		conn.iter().for_each(|x| match x {
+			Ok(x) => {
+				dbg!(x);
+			}
+			Err(e) => eprintln!("{e}"),
 		})
 	});
 

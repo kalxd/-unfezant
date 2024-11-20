@@ -8,8 +8,9 @@ pub trait SendMessage {
 
 impl SendMessage for Client {
 	fn send<T: Into<Vec<u8>>>(&self, payload: T) {
-		self.publish(CHANNEL, QoS::AtLeastOnce, false, payload)
-			.unwrap()
+		let x = self.publish(CHANNEL, QoS::AtLeastOnce, false, payload);
+		dbg!(&x);
+		x.unwrap()
 	}
 }
 
