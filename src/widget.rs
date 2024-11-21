@@ -43,6 +43,24 @@ pub struct SendMessager {
 	send_btn: Button,
 }
 
+trait SendTextExt {
+	fn try_get_text(&self) -> Option<String>;
+}
+
+impl SendTextExt for Entry {
+	fn try_get_text(&self) -> Option<String> {
+		let text = self.text();
+		let text = text.trim();
+
+		if text.is_empty() {
+			return None;
+		}
+
+		self.set_text("");
+		Some(text.to_string())
+	}
+}
+
 impl SendMessager {
 	pub fn new() -> Self {
 		let container = GtkBox::new(gtk4::Orientation::Horizontal, 10);
@@ -69,14 +87,16 @@ impl SendMessager {
 			let f = f.clone();
 			let entry = self.text_entry.clone();
 			move |_| {
-				let value = entry.text();
-				f(value.to_string());
+				if let Some(msg) = entry.try_get_text() {
+					f(msg);
+				}
 			}
 		});
 
 		self.text_entry.connect_activate(move |entry| {
-			let value = entry.text();
-			f(value.to_string())
+			if let Some(msg) = entry.try_get_text() {
+				f(msg);
+			}
 		});
 	}
 }

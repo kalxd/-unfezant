@@ -2592,7 +2592,6 @@ dependencies = [
  "gtk4",
  "rumqttc",
  "rumqttd",
- "serde_json",
 ]
 
 [[package]]

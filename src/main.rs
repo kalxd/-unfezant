@@ -43,23 +43,28 @@ fn setup_ui(app: &Application) {
 
 	let (client, mut conn) = client::new_client();
 
-	thread::spawn({
-		move || {
-			conn.iter()
-				.filter_map(|x| x.ok())
-				.filter_map(|x| match x {
-					Event::Incoming(m) => Some(m),
-					_ => None,
-				})
-				.filter_map(|x| match x {
-					Packet::Publish(p) => Some(p),
-					_ => None,
-				})
-				.for_each(|x| {
-					let msg = format!("接收到：{:?}", from_utf8(&x.payload));
-					sx.try_send(MessageAction::Packet(msg)).unwrap();
-				});
-		}
+	thread::spawn(move || {
+		conn.iter()
+			.filter_map(|x| x.ok())
+			.inspect({
+				let mut sx = sx.clone();
+				move |x| {
+					let payload = format!("{:?}\n", x);
+					sx.try_send(MessageAction::Packet(payload)).unwrap();
+				}
+			})
+			.filter_map(|x| match x {
+				Event::Incoming(Packet::Publish(m)) => Some(m),
+				_ => None,
+			})
+			.filter_map(|x| {
+				from_utf8(&x.payload)
+					.map(|s| format!("接受到：\n{:?}\n", s))
+					.ok()
+			})
+			.for_each(|msg| {
+				sx.try_send(MessageAction::Packet(msg.to_string())).unwrap();
+			});
 	});
 
 	glib::MainContext::default().spawn_local(async move {
