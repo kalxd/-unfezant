@@ -1,5 +1,5 @@
-use gtk4::{
-	prelude::{BoxExt, ButtonExt, EditableExt, EntryExt, TextBufferExt, WidgetExt},
+use gtk::{
+	prelude::{BoxExt, ButtonExt, EntryExt, TextBufferExt, WidgetExt},
 	Box as GtkBox, Button, Entry, Frame, ScrolledWindow, TextBuffer, TextView,
 };
 
@@ -11,7 +11,7 @@ pub struct LogView {
 
 impl LogView {
 	pub fn new() -> Self {
-		let text_buf = TextBuffer::new(None);
+		let text_buf = TextBuffer::builder().build();
 		let view = TextView::builder()
 			.buffer(&text_buf)
 			.editable(false)
@@ -63,14 +63,14 @@ impl SendTextExt for Entry {
 
 impl SendMessager {
 	pub fn new() -> Self {
-		let container = GtkBox::new(gtk4::Orientation::Horizontal, 10);
+		let container = GtkBox::new(gtk::Orientation::Horizontal, 10);
 
 		let text_entry = Entry::new();
 		text_entry.set_hexpand(true);
-		container.append(&text_entry);
+		container.pack_start(&text_entry, true, true, 0);
 
 		let send_btn = Button::with_label("发送");
-		container.append(&send_btn);
+		container.pack_start(&send_btn, false, false, 0);
 
 		Self {
 			container,

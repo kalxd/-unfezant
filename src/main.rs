@@ -1,8 +1,8 @@
 use client::SendMessage;
 use futures::{channel::mpsc, future::ready, StreamExt};
-use gtk4::{
+use gtk::{
 	glib,
-	prelude::{ApplicationExt, ApplicationExtManual, BoxExt, GtkWindowExt},
+	prelude::{ApplicationExt, ApplicationExtManual, BoxExt, WidgetExt},
 	Application, ApplicationWindow, Box as GtkBox, Orientation,
 };
 use rumqttc::{Event, Packet};
@@ -26,10 +26,10 @@ fn setup_ui(app: &Application) {
 		.build();
 
 	let log_view = widget::LogView::new();
-	layout.append(&log_view.container);
+	layout.pack_start(&log_view.container, true, true, 0);
 
 	let messager = widget::SendMessager::new();
-	layout.append(&messager.container);
+	layout.pack_start(&messager.container, false, false, 0);
 
 	let window = ApplicationWindow::builder()
 		.application(app)
@@ -39,7 +39,7 @@ fn setup_ui(app: &Application) {
 		.child(&layout)
 		.build();
 
-	window.present();
+	window.show_all();
 
 	let (client, mut conn) = client::new_client();
 
