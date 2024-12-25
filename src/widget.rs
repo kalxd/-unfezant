@@ -1,6 +1,6 @@
-use gtk::{
-	prelude::{BoxExt, ButtonExt, EntryExt, TextBufferExt, WidgetExt},
-	Box as GtkBox, Button, Entry, Frame, ScrolledWindow, TextBuffer, TextView,
+use gtk4::{
+	prelude::{BoxExt, ButtonExt, EditableExt, EntryExt, TextBufferExt, WidgetExt},
+	Box as GtkBox, Button, Entry, Frame, Orientation, ScrolledWindow, TextBuffer, TextView,
 };
 
 #[derive(Clone)]
@@ -63,14 +63,14 @@ impl SendTextExt for Entry {
 
 impl SendMessager {
 	pub fn new() -> Self {
-		let container = GtkBox::new(gtk::Orientation::Horizontal, 10);
+		let container = GtkBox::new(Orientation::Horizontal, 10);
 
 		let text_entry = Entry::new();
 		text_entry.set_hexpand(true);
-		container.pack_start(&text_entry, true, true, 0);
+		container.append(&text_entry);
 
 		let send_btn = Button::with_label("发送");
-		container.pack_start(&send_btn, false, false, 0);
+		container.append(&send_btn);
 
 		Self {
 			container,
